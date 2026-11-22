@@ -86,7 +86,7 @@ button{background:transparent;border:1px solid var(--ln);border-radius:8px;curso
 <label><span>Song vol.</span><input type="range" id="bv" min="0" max="1" step=".01" value=".7"></label>
 <label><input type="checkbox" id="ib" checked> Put the song in the saved file</label>
 <label><span>File</span><select id="bt"><option value="16">WAV 16-bit</option><option value="24">WAV 24-bit</option></select></label><hr>
-<div class="sw" id="cols"></div></div>
+<div class="sw" id="cols"></div><hr><div class="sw"><button id="upd" style="padding:8px 12px;font-weight:600">Update the app</button><small style="color:var(--mu)">Version 5 — tap to load the newest files</small></div></div>
 <div class="pop sl" id="songs" hidden></div><input type="file" id="mf" accept=".mid,.midi,audio/midi" hidden>
 <div class="pop" id="help" hidden></div>
 </div>
@@ -232,6 +232,7 @@ function rUI(){const has=evs.length>0,rb=$('#rbar');rb.hidden=!(rec||has);$('#rd
 $('#rpl').onclick=()=>$('#pb').click();$('#rsv2').onclick=()=>$('#sv').click();
 $('#rdl').onclick=()=>{pbStop();evs=[];$('#pb').disabled=$('#sv').disabled=true;$('#lat').textContent='Recording deleted.';rUI()};
 $('#rpl').title='Play what you recorded';$('#rdl').title='Delete — throws away the recording';$('#rsv2').title='Save — puts your recording on your phone as a WAV file';
+$('#upd').onclick=async()=>{$('#upd').textContent='Updating…';try{const rs=await navigator.serviceWorker.getRegistrations();await Promise.all(rs.map(r=>r.unregister()));const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}catch(e){}location.href=location.pathname+'?v='+Date.now()};
 // icons, titles, theme, help, install, rotation
 [['ped','ped','Sustain — notes keep ringing after you let go'],['midi','midi','MIDI keyboard — connect a Bluetooth or USB keyboard'],['rc','rec','Record — records your keys, chords and the imported song'],['pb','play','Play back — hear your recording'],['sv','save','Save — puts your recording on your phone as a WAV file'],['pnl','sl','Settings — volume, reverb, tempo, key, songs and colours'],['hlp','help','Help — what each button does'],['stp','stop','Stop — stops the chord pattern'],['imp','folder','Import song — pick an MP3 or WAV to play along with'],['bp','play','Play song — plays the imported song'],['bs','stop','Stop song']].forEach(([id,ic,t])=>{const e=$('#'+id);e.innerHTML=I(ic);e.title=t});
 const AB={ped:'SUS',midi:'MID',clk:'CLK',rc:'REC',pb:'PLAY',sv:'SAVE',lrn:'LRN',pnl:'SET',hlp:'HLP',rws:'ROWS',imp:'LOAD',bp:'PLAY',bs:'STOP'};Object.keys(AB).forEach(k=>{const e=$('#'+k);if(e)e.dataset.ab=AB[k]});
