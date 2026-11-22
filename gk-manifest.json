@@ -1,7 +1,8 @@
 {
+  "id": "/piano.html",
   "name": "Grand Keys",
   "short_name": "Grand Keys",
-  "description": "Piano with gospel and worship chord styles, recording and import.",
+  "description": "Grand Keys piano",
   "start_url": "./piano.html",
   "scope": "./",
   "display": "standalone",
@@ -11,6 +12,7 @@
   "icons": [
     { "src": "gk-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "gk-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "gk-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "gk-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "gk-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
