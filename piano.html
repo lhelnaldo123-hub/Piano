@@ -64,6 +64,7 @@ button{background:transparent;border:1px solid var(--ln);border-radius:8px;curso
 .sl button.s small{color:var(--mu);float:right}.sl p{color:var(--mu);font-size:12px;margin:6px 0}
 #lsv{cursor:default}
 .sl button.s{width:100%;text-align:left;padding:8px 10px;margin:3px 0}
+#sp{right:auto;left:50%;transform:translateX(-50%);top:64px;width:min(320px,92%);text-align:center;z-index:12;box-shadow:0 8px 30px #0008}#sp button.s{text-align:center;font-weight:600;padding:11px 10px}#sp b{font-size:15px;color:inherit;margin:2px 0 4px}
 </style></head><body>
 <div id="app">
 <div id="bar"><div class="g" id="snd"></div><i class="sp"></i><div class="g" id="sty"></div><i class="sp"></i>
@@ -87,7 +88,7 @@ button{background:transparent;border:1px solid var(--ln);border-radius:8px;curso
 <label><input type="checkbox" id="ib" checked> Put the song in the saved file</label>
 <label><span>File</span><select id="bt"><option value="16">WAV 16-bit</option><option value="24">WAV 24-bit</option></select></label><hr>
 <div class="sw" id="cols"></div><hr><div class="sw"><button id="upd" style="padding:8px 12px;font-weight:600">Update the app</button><small style="color:var(--mu)">Version 5 — tap to load the newest files</small></div></div>
-<div class="pop sl" id="songs" hidden></div><input type="file" id="mf" accept=".mid,.midi,audio/midi" hidden>
+<div class="pop sl" id="songs" hidden></div><div class="pop sl" id="sp" hidden></div><input type="file" id="mf" accept=".mid,.midi,audio/midi" hidden>
 <div class="pop" id="help" hidden></div>
 </div>
 <script>
@@ -307,45 +308,85 @@ const NAMEOF=n=>NM[n%12];
 function lmode(){const e=$('#lmd');e.innerHTML=I(L.wait?'hand':'eye');e.title=L.wait?'Wait for me — the song stops until you press the right key (tap to switch to Watch)':'Watch — the song plays by itself (tap to switch to Wait for me)'}
 function lpl(){const e=$('#lpl');e.innerHTML=I(L.play?'pause':'play');e.title=L.play?'Pause — stop here and practise':'Play — start or continue'}
 lmode();lpl();lopUI();$('#lsm').title='Slower — practise at a slower speed';$('#lsp').title='Faster — play at a faster speed';$('#lnm').title='Note names — show or hide letters on the falling notes';
-function lopen(on){$('#app').classList.toggle('lr',on);$('#wrap').classList.toggle('lr',on);if(!on){L.play=false;lpl();clearH()}else if(!L.s)showSongs()}
-function load(name,bpm,notes){init();L.s=name;L.bpm=bpm;L.notes=notes.map(x=>{let n=x.n;while(n<LO)n+=12;while(n>HI)n-=12;return{t:x.t,d:x.d,n,done:0,pl:0}}).sort((a,b)=>a.t-b.t);L.tot=Math.max(...L.notes.map(x=>x.t+x.d));L.pos=-3;L.lo=0;lopUI();L.play=false;lpl();$('#lt').textContent=name;
- const ns=L.notes.map(x=>x.n),a=kx[Math.min(...ns)],b=kx[Math.max(...ns)],mid=(a.x+b.x)/2-kw.clientWidth/2,mx=kb.scrollWidth-kw.clientWidth;sc.value=Math.round(Math.max(0,Math.min(mx,mid))/mx*100);pan();$('#songs').hidden=true}
-function reset(){L.pos=-3;L.lo=0;lopUI();L.notes.forEach(x=>{x.done=0;x.pl=0})}
+function lopen(on){$('#app').classList.toggle('lr',on);$('#wrap').classList.toggle('lr',on);if(!on){L.play=false;lpl();clearH();$('#sp').hidden=true}else if(!L.s)showSongs()}
+function load(name,bpm,notes,pp){init();L.s=name;L.bpm=bpm;L.notes=notes.map(x=>{let n=x.n;while(n<LO)n+=12;while(n>HI)n-=12;return{t:x.t,d:x.d,n,done:0,pl:0}}).sort((a,b)=>a.t-b.t);L.tot=Math.max(...L.notes.map(x=>x.t+x.d));L.pos=-3;L.lo=0;lopUI();L.play=false;lpl();$('#lt').textContent=name;
+ const ns=L.notes.map(x=>x.n),a=kx[Math.min(...ns)],b=kx[Math.max(...ns)],mid=(a.x+b.x)/2-kw.clientWidth/2,mx=kb.scrollWidth-kw.clientWidth;sc.value=Math.round(Math.max(0,Math.min(mx,mid))/mx*100);pan();$('#songs').hidden=true;L.sec=pp?autoSec(L.notes,pp):[0];L.part=0;L.parts=false;ptxt();if(L.sec.length>1)showSP('start');else $('#sp').hidden=true}
+function reset(){L.pos=-3;L.lo=0;lopUI();L.part=0;ptxt();L.notes.forEach(x=>{x.done=0;x.pl=0})}
+// ---- parts: split a song into sections and ask what to do after each one ----
+function autoSec(ns,min){const a=[...ns].sort((x,y)=>x.t-y.t),tot=Math.max(...a.map(x=>x.t+x.d)),B=[0];let st=0;
+ for(let i=0;i<a.length-1;i++){const x=a[i],e=x.t+x.d,nx=a[i+1].t;if(nx<=st||nx<=x.t)continue;const len=e-st;
+  if((len>=min&&(x.d>=1.5||nx-e>=1))||len>=2*min){if(tot-nx>=4){B.push(nx);st=nx}}}
+ return B}
+function partAt(p){let i=0;(L.sec||[0]).forEach((b,k)=>{if(p>=b-1e-6)i=k});return i}
+function ptxt(){if(!L.s)return;$('#lt').textContent=L.s+(L.parts&&L.sec&&L.sec.length>1?' · Part '+(L.part+1)+' of '+L.sec.length:'')}
+function showSP(m){const e=$('#sp'),N=L.sec.length;e.innerHTML='';
+ const T=t=>{const b=document.createElement('b');b.textContent=t;e.appendChild(b)};
+ const P=t=>{const p=document.createElement('p');p.textContent=t;e.appendChild(p)};
+ const A=(t,f)=>{const b=document.createElement('button');b.className='s';b.textContent=t;b.onclick=()=>{e.hidden=true;f()};e.appendChild(b)};
+ const full=()=>{L.parts=false;reset();ptxt();L.play=true;lpl()};
+ if(m=='start'){T('“'+L.s+'” — '+N+' parts');P('Learn one part at a time, or play the whole song.');
+  A('Learn in parts',()=>{L.parts=true;reset();ptxt()});A('Play the full song',()=>{L.parts=false;ptxt()})}
+ else if(m=='part'){T('Part '+(L.part+1)+' of '+N+' done');P('Do you want to practise it again, or go on?');
+  A('Continue this part again',()=>{const s=L.sec[L.part];L.pos=s-2;L.notes.forEach(x=>{const f=x.t<s-.001?1:0;x.done=f;x.pl=f});L.play=true;lpl()});
+  A('Continue to next part →',()=>{L.part++;ptxt();L.play=true;lpl()});
+  A('Play the full song',full)}
+ else{T('You finished the song!');P('Well done.');A('Start again in parts',()=>{L.parts=true;reset();ptxt()});A('Play the full song',full)}
+ e.hidden=false}
 L.hit=n=>{if(!L.s)return;const x=L.notes.find(q=>!q.done&&q.n==n&&Math.abs(q.t-L.pos)<=.6);if(x)x.done=1};
 $('#lrn').onclick=()=>lopen(!$('#app').classList.contains('lr'));$('#lx').onclick=()=>lopen(false);
 $('#lsg').onclick=()=>showSongs();
-$('#lpl').onclick=()=>{if(!L.s){showSongs();return}init();ac.resume();if(L.pos>L.tot)reset();L.play=!L.play;lpl()};
-$('#lrs').onclick=()=>{reset();L.play=false;lpl()};
-$('#lbk').onclick=()=>{L.pos=Math.max(-3,L.pos-4);L.notes.forEach(x=>{if(x.t>=L.pos-.5){x.done=0;x.pl=0}})};
+$('#lpl').onclick=()=>{if(!L.s){showSongs();return}if(!$('#sp').hidden)return;init();ac.resume();if(L.pos>L.tot)reset();L.play=!L.play;lpl()};
+$('#lrs').onclick=()=>{$('#sp').hidden=true;reset();L.play=false;lpl()};
+$('#lbk').onclick=()=>{$('#sp').hidden=true;L.pos=Math.max(-3,L.pos-4);L.part=partAt(L.pos);ptxt();L.notes.forEach(x=>{if(x.t>=L.pos-.5){x.done=0;x.pl=0}})};
 function lopUI(){const e=$('#lop');e.innerHTML=I('loop');e.classList.toggle('on',L.lo==2);e.style.borderColor=L.lo==1?'#ffb347':'';e.title=L.lo==0?'Rehearse — tap to mark where the practice part starts':L.lo==1?'Rehearse — tap again to mark the end; the part will repeat':'Rehearse — repeating this part (tap to stop repeating)'}
 $('#lop').onclick=()=>{if(!L.s)return;if(L.lo==0){L.la=Math.max(0,L.pos);L.lo=1;$('#lat').textContent='Start marked. Play to the end of the part, then tap Rehearse again.'}else if(L.lo==1){L.lb=L.pos;if(L.lb-L.la<1){L.lb=L.la+4}L.lo=2;L.pos=L.la;L.notes.forEach(x=>{if(x.t>=L.la-.01){x.done=0;x.pl=0}});$('#lat').textContent='Repeating this part. Tap Rehearse to stop.'}else{L.lo=0;$('#lat').textContent='Back to the full song.'}lopUI()};
 $('#lmd').onclick=()=>{L.wait=!L.wait;lmode();reset();L.play=false;lpl()};
 const spd=d=>{si=Math.max(0,Math.min(SPD.length-1,si+d));L.sp=SPD[si];$('#lsv').textContent=Math.round(L.sp*100)+'%'};$('#lsm').onclick=()=>spd(-1);$('#lsp').onclick=()=>spd(1);
 $('#lnm').onclick=()=>{L.names=!L.names;$('#lnm').classList.toggle('on',L.names);$('#wrap').classList.toggle('nm',L.names)};
-let stab=0;
+let stab=0,ot=0,pa=null;const nz=t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
 function showSongs(){const e=$('#songs');
  if(!e.dataset.b){e.dataset.b=1;e.innerHTML='<div class="tb"></div><input type="search" id="sq" placeholder="Search a song or beat…"><div id="slist"></div>';
   ['Songs','Beats','Find / Import'].forEach((n,i)=>{const b=document.createElement('button');b.textContent=n;b.onclick=()=>{stab=i;rl()};e.firstChild.appendChild(b)});$('#sq').oninput=rl}
- e.hidden=false;help.hidden=true;sheet.hidden=true;rl()}
+ e.hidden=false;$('#sp').hidden=true;help.hidden=true;sheet.hidden=true;rl()}
 function rl(){const q=$('#sq').value.trim().toLowerCase(),o=$('#slist');o.innerHTML='';[...$('#songs .tb').children].forEach((b,i)=>b.classList.toggle('on',i==stab&&!q));
- const add=(arr,h)=>{const m=arr.filter(s=>!q||s[0].toLowerCase().includes(q));if(!m.length)return 0;o.insertAdjacentHTML('beforeend','<b>'+h+'</b>');m.forEach(s=>{const b=document.createElement('button');b.className='s';b.innerHTML='<small>'+s[1]+' bpm</small>';b.append(s[0]);b.onclick=()=>load(s[0],s[1],parseS(s[2]));o.appendChild(b)});return m.length};
+ const add=(arr,h)=>{const m=arr.filter(s=>!q||nz(s[0]).includes(nz(q)));if(!m.length)return 0;o.insertAdjacentHTML('beforeend','<b>'+h+'</b>');m.forEach(s=>{const b=document.createElement('button');b.className='s';b.innerHTML='<small>'+s[1]+' bpm</small>';b.append(s[0]);b.onclick=()=>load(s[0],s[1],parseS(s[2]),arr===SG?12:0);o.appendChild(b)});return m.length};
  let n=0;if(q){n+=add(SG,'Songs');n+=add(BT,'Beats')}else if(stab==0)add(SG,SG.length+' songs');else if(stab==1)add(BT,BT.length+' beats');
- if(q&&!n)o.insertAdjacentHTML('beforeend','<p>No song called “'+q.replace(/</g,'')+'” here yet.</p>');
- if(q||stab==2){const w=document.createElement('button');w.className='s';w.textContent=q?'Search the web for “'+q+'” MIDI':'Search the web for a song MIDI';w.onclick=()=>window.open('https://www.google.com/search?q='+encodeURIComponent((q||'easy piano song')+' free MIDI file download'),'_blank');o.appendChild(w)}
+ if(q&&!n)o.insertAdjacentHTML('beforeend','<p>No song called “'+q.replace(/</g,'')+'” in your list. Searching online…</p>');
+ clearTimeout(ot);
+ if(q||stab==2){const web=(t,u)=>{const w=document.createElement('button');w.className='s';w.textContent=t;w.onclick=()=>window.open(u,'_blank');o.appendChild(w)};
+  if(q){const ob=document.createElement('button');ob.className='s';ob.textContent='🔍 Search online for “'+q+'”';ob.onclick=()=>onl(q);o.appendChild(ob);o.insertAdjacentHTML('beforeend','<div id="onl"></div>');if(!n)ot=setTimeout(()=>onl(q),700)}
+  web(q?'Find “'+q+'” notes / MIDI on the web':'Search the web for a song MIDI','https://www.google.com/search?q='+encodeURIComponent((q||'easy piano song')+' piano notes free MIDI file download'));
+  if(q)web('Find “'+q+'” on YouTube','https://www.youtube.com/results?search_query='+encodeURIComponent(q+' piano tutorial'))}
  if(stab==2||q){o.insertAdjacentHTML('beforeend','<p>Found a MIDI online? Download it, then import it here — or paste its link.</p>');
   const m=document.createElement('button');m.className='s';m.textContent='Import a MIDI file (.mid) from your phone';m.onclick=()=>$('#mf').click();o.appendChild(m);
   const u=document.createElement('input');u.type='url';u.placeholder='Paste a link to a .mid file';o.appendChild(u);
-  const g=document.createElement('button');g.className='s';g.textContent='Load from link';g.onclick=async()=>{const v=u.value.trim();if(!v)return;try{const r=await fetch(v);if(!r.ok)throw 0;const x=midiS(await r.arrayBuffer());load(decodeURIComponent(v.split('/').pop().split('?')[0]).replace(/\.midi?$/i,'')||'Online song',x.bpm,x.notes)}catch(z){$('#lat').textContent='That site does not allow loading directly. Download the .mid file and import it instead.'}};o.appendChild(g);
+  const g=document.createElement('button');g.className='s';g.textContent='Load from link';g.onclick=async()=>{const v=u.value.trim();if(!v)return;try{const r=await fetch(v);if(!r.ok)throw 0;const x=midiS(await r.arrayBuffer());load(decodeURIComponent(v.split('/').pop().split('?')[0]).replace(/\.midi?$/i,'')||'Online song',x.bpm,x.notes,16)}catch(z){$('#lat').textContent='That site does not allow loading directly. Download the .mid file and import it instead.'}};o.appendChild(g);
   o.insertAdjacentHTML('beforeend','<p>Tip: MIDI files teach the exact notes. Recordings like MP3 cannot be turned into notes reliably.</p>')}}
-$('#mf').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const r=midiS(await f.arrayBuffer());load(f.name.replace(/\.midi?$/i,''),r.bpm,r.notes)}catch(x){$('#lat').textContent='That MIDI file could not be read.'}e.target.value=''};
+function onl(q){const d=$('#onl');if(!d)return;d.innerHTML='<p>Searching online…</p>';let done=0;const cb='gkj'+Date.now(),sc=document.createElement('script');
+ const fail=m=>{const e=$('#onl');if(e&&$('#sq').value.trim().toLowerCase()==q.toLowerCase())e.innerHTML='<p>'+m+'</p>'};
+ window[cb]=r=>{done=1;delete window[cb];sc.remove();const e=$('#onl');if(!e||$('#sq').value.trim().toLowerCase()!=q.toLowerCase())return;e.innerHTML='';const R=(r.results||[]).filter(x=>x.trackName);
+  if(!R.length){e.innerHTML='<p>Nothing found online for “'+q.replace(/</g,'')+'”. Try another spelling or the artist name, or use the buttons below.</p>';return}
+  e.insertAdjacentHTML('beforeend','<b>Online results — tap ▶ to hear a 30-second preview</b>');
+  R.forEach(x=>{const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:8px;margin:4px 0';
+   const im=document.createElement('img');im.src=(x.artworkUrl60||'');im.width=40;im.height=40;im.style.borderRadius='6px';im.alt='';
+   const tx=document.createElement('div');tx.style.cssText='flex:1;min-width:0;text-align:left;font-size:13px';const t=document.createElement('div');t.style.cssText='font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';t.textContent=x.trackName;const a=document.createElement('small');a.style.color='var(--mu)';a.textContent=x.artistName;tx.append(t,a);
+   const pl=document.createElement('button');pl.textContent='▶';pl.className='ib';pl.onclick=()=>{if(pa){pa.pause();if(pa._b===pl){pa=null;pl.textContent='▶';return}pa._b.textContent='▶'}
+    pa=new Audio(x.previewUrl);pa._b=pl;pl.textContent='■';pa.onended=()=>{pl.textContent='▶'};pa.play().catch(()=>{pl.textContent='▶'})};
+   const nt=document.createElement('button');nt.textContent='Notes';nt.className='ib';nt.style.width='auto';nt.style.padding='0 8px';nt.title='Find the notes or MIDI for this song';nt.onclick=()=>window.open('https://www.google.com/search?q='+encodeURIComponent(x.trackName+' '+x.artistName+' piano notes free MIDI file download'),'_blank');
+   row.append(im,tx);if(x.previewUrl)row.appendChild(pl);row.appendChild(nt);e.appendChild(row)})};
+ sc.onerror=()=>{if(!done)fail('Could not search online. Check your internet and try again.')};
+ setTimeout(()=>{if(!done)fail('Online search is slow or you are offline. Try again.')},9000);
+ sc.src='https://itunes.apple.com/search?media=music&entity=song&limit=12&term='+encodeURIComponent(q)+'&callback='+cb;document.body.appendChild(sc)}
+$('#mf').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const r=midiS(await f.arrayBuffer());load(f.name.replace(/\.midi?$/i,''),r.bpm,r.notes,16)}catch(x){$('#lat').textContent='That MIDI file could not be read.'}e.target.value=''};
 let hs=[];const allEl=n=>[kbEl[n],...XR.map(r=>r.els[n])].filter(Boolean);function clearH(){hs.forEach(n=>allEl(n).forEach(e=>e.classList.remove('h')));hs=[]}
 function frame(ts){requestAnimationFrame(frame);if(!$('#app').classList.contains('lr'))return;const dpr=devicePixelRatio||1,w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);if(cv.width!=w||cv.height!=h){cv.width=w;cv.height=h}
  const dt=Math.min(.1,(ts-(L.last||ts))/1000);L.last=ts;
  if(L.play&&L.s){let np=L.pos+dt*L.bpm*L.sp/60;
   if(L.wait){const due=L.notes.find(x=>!x.done&&x.t<=np);if(due&&due.t<np)np=Math.max(due.t,L.pos<due.t?L.pos:due.t)}
-  else L.notes.forEach(x=>{if(!x.pl&&x.t<=np){x.pl=1;x.done=1;pl(x.n,.65,ac.currentTime,Math.max(.12,x.d*60/(L.bpm*L.sp)*.95))}});
+  let hit=0;if(L.parts&&L.lo!=2&&L.sec&&L.part+1<L.sec.length){const e=L.sec[L.part+1];if(np>=e){np=e-1e-6;hit=1}}
+  if(!L.wait)L.notes.forEach(x=>{if(!x.pl&&x.t<=np){x.pl=1;x.done=1;pl(x.n,.65,ac.currentTime,Math.max(.12,x.d*60/(L.bpm*L.sp)*.95))}});
   if(L.lo==2&&np>=L.lb){np=L.la;L.notes.forEach(x=>{if(x.t>=L.la-.01){x.done=0;x.pl=0}})}
-  L.pos=np;if(np>L.tot+1){L.play=false;lpl()}}
+  L.pos=np;if(hit){L.play=false;lpl();showSP('part')}else if(np>L.tot+1){L.play=false;lpl();if(L.parts&&L.sec.length>1)showSP('end')}}
  const g=cv.getContext('2d'),W=cv.width,H=cv.height,ppb=H/6,sx=kw.scrollLeft;g.clearRect(0,0,W,H);g.fillStyle='#ffffff30';g.fillRect(0,H-2*dpr,W,2*dpr);
  const nh=new Set();
  L.notes.forEach(x=>{const y1=H-(x.t-L.pos)*ppb,y0=H-(x.t+x.d-L.pos)*ppb;if(y1<0||y0>H)return;const k=kx[x.n];if(!k)return;const cur=x.t<=L.pos+.25&&x.t+x.d>L.pos;if(cur&&(!x.done||!L.wait))nh.add(x.n);
