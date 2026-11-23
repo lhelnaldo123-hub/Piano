@@ -4,4 +4,20 @@
 const A='G3/1 C4/2 E4/.5 C4/.5 E4/2 D4/1 C4/2 A3/1 G3/3';
 SG.push(['Amazing Grace (full hymn, 4 lines)',66,[A,'G3/1 C4/2 E4/.5 C4/.5 E4/2 D4/1 G4/3',A,'G3/1 C4/2 E4/.5 C4/.5 E4/2 D4/1 C4/3'].join(' ')]);
 SG.push(['We Wish You a Merry Christmas',120,'D4/1 G4/1 G4/.5 A4/.5 G4/.5 F#4/.5 E4/1 E4/1 E4/1 A4/1 A4/.5 B4/.5 A4/.5 G4/.5 F#4/1 D4/1 D4/1 B4/1 B4/.5 C5/.5 B4/.5 A4/.5 G4/1 E4/1 D4/.5 D4/.5 E4/1 A4/1 F#4/1 G4/3']);
+// ---- O Happy Day (written from memory: play it once to check the tune) ----
+SG.push(['O Happy Day',84,'G3/1 C4/1 C4/1 C4/1 D4/1 E4/2 E4/1 D4/1 C4/1 D4/1 E4/1 G4/3 R/1 G4/1 G4/1 A4/1 G4/1 E4/3 R/1 E4/1 G4/1 G4/1 A4/1 G4/1 E4/1 D4/1 C4/4']);
+// ---- 5 more hymns (written from memory, NOT checked: tap a wrong note to fix it, then Save) ----
+SG.push(['Holy, Holy, Holy (check tune)',76,'E4/1 E4/1 E4/1 G4/1 G4/2 E4/1 E4/1 D4/1 E4/1 F4/1 D4/3 R/1 E4/1 E4/1 E4/1 G4/1 G4/2 C5/1 B4/1 A4/1 G4/1 A4/1 G4/3']);
+SG.push(['What a Friend We Have in Jesus (check tune)',80,'C4/1 C4/1 E4/1 G4/1 G4/1 A4/1 G4/2 G4/1 G4/1 E4/1 C4/1 D4/1 E4/1 D4/2 C4/1 C4/1 E4/1 G4/1 G4/1 A4/1 G4/2 G4/1 G4/1 E4/1 D4/1 C4/4']);
+SG.push(['Blessed Assurance (check tune)',84,'E4/1 G4/1 C5/1 B4/1 A4/1 G4/1 E4/1 G4/1 A4/1 G4/3 E4/1 G4/1 C5/1 B4/1 A4/1 G4/1 E4/1 D4/1 C4/3']);
+SG.push(['Rock of Ages (check tune)',72,'E4/1 E4/1 D4/1 C4/1 D4/1 E4/2 R/1 G4/1 G4/1 A4/1 G4/1 E4/1 D4/2 R/1 E4/1 E4/1 D4/1 C4/1 D4/1 E4/1 D4/1 C4/3']);
+SG.push(['Because He Lives (check tune)',80,'G4/1 C5/1 C5/1 D5/1 E5/2 D5/1 C5/1 C5/1 G4/1 A4/1 G4/3 R/1 G4/1 C5/1 C5/1 D5/1 E5/2 G5/1 E5/1 D5/1 C5/1 D5/1 C5/3']);
+// ---- × close button on every pop-up (settings, songs, help, parts, fix-note) ----
+(()=>{
+const st=document.createElement('style');
+st.textContent='.xb{display:block;position:sticky;top:0;z-index:5;width:30px;height:30px;margin:-6px -6px -24px auto;padding:0;border-radius:50%;font:700 20px/28px system-ui;text-align:center;background:var(--pn);color:var(--tx)}';
+document.head.appendChild(st);
+const addX=p=>{if(p.querySelector(':scope>.xb'))return;const b=document.createElement('button');b.className='xb';b.type='button';b.textContent='×';b.setAttribute('aria-label','Close');b.onclick=ev=>{ev.stopPropagation();p.hidden=true};p.insertBefore(b,p.firstChild)};
+document.querySelectorAll('#app .pop').forEach(p=>{addX(p);new MutationObserver(()=>addX(p)).observe(p,{childList:true})});
+})();
 })();
